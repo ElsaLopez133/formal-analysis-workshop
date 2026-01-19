@@ -1,0 +1,119 @@
+/*
+ * Protocol:   Toy example using DH
+
+ Assumptions
+- Long-term signing keys for A and B
+- Ephemeral DH exponents
+- Signatures authenticate DH shares
+
+We want to check:
+- Secrecy: The attacker never learns the session key K
+- Authentication: If B finishes a session apparently with A, then A previously started a session with B using the same DH share
+
+*/
+
+theory example
+
+begin
+
+builtins: diffie-hellman, symmetric-encryption, asymmetric-encryption, signing
+
+functions:
+    checksign/2
+
+equations:
+    checksign(sign(m, sk), pk(sk)) = m
+
+#include "headers.splib"
+
+heuristic:s
+/*
+symmetric-encryption: 
+It models symmetric encryption scheme. 
+It defines the funciton symbols senc/2 and sdec/2 with the equation sdec(senc(m, k), k) = m.
+
+asymmetric-encryption: 
+It models asymmetric encryption scheme. 
+It defines the function symbols aenc/2 and adec/2 with the equation adec(aenc(m, pk), sk) = m.
+
+signing: 
+It models digital signature scheme. 
+It defines the function symbols pk/1, sign/2 and verify/3 with the equation verify(sign(m, sk),m, pk(sk)) = true.
+*/
+
+let clientA(~skA, pkA, pkB) = 
+    let m1 = pkA in
+    out(m1);
+
+    in(m2);
+    let sigB = adec(m2, ~skA) in
+    let <pkB_in, k_in> = sigB in
+
+    // verify B's signature
+    if (verify(sigB, <pkB_in, k_in>, pkB) = true) then
+        let k = k_in in
+        event AcceptsClient(k_in);
+        new ~s;
+        event SecretS(~s);
+        (
+            leakKey(~s)
+            |
+            // Fail
+            // let m3 = senc(~s, k_in) in
+            // Pass
+            let m3 = senc(<~s, pkA>, k) in
+            out(m3);
+            event TermClient(k, pkA);
+            0
+        )
+    else
+        0
+
+
+let serverB(~skB, pkB, pkA) = 
+    in(m1);
+    let pkA_in = m1 in
+
+    new ~k;
+    event AcceptsServer(~k, pkA_in);
+    // sign identity + key
+    let sigB = sign(<pkB, ~k>, ~skB) in
+
+    // Encyrpt signature under A's public key
+    let m2 = aenc(sigB, pkA_in) in
+    out(m2);
+
+    in(m3);
+    // Fail
+    // let s = sdec(m3, ~k) in
+    // Pass
+    let <pkA_check, s> = sdec(m3, ~k) in
+    (
+        leakKey(s)
+        |
+        if pkA_in = pkA then
+            event TermServer(~k);
+            0
+        else
+            0
+    )
+
+#include "properties.splib"
+
+process:
+    new ~skA; // A's long-term signing secret key
+    new ~skB; // B's long-term signing secret key
+    let pkA = pk(~skA) in
+    let pkB = pk(~skB) in
+
+    // Public keys are public
+    out(pkA);
+    out(pkB);
+
+    (
+        !clientA(~skA, pkA, pkB)
+        | 
+        !serverB(~skB, pkB, pkA)
+    )
+
+end

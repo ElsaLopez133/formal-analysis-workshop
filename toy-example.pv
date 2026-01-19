@@ -1,0 +1,161 @@
+const g:bitstring.
+free att:channel.
+fun adec(bitstring,bitstring):bitstring.
+fun aenc(bitstring,bitstring):bitstring.
+fun checksign(bitstring,bitstring):bitstring.
+fun exp(bitstring,bitstring):bitstring.
+fun fst(bitstring):bitstring.
+fun okay():bitstring.
+fun pair(bitstring,bitstring):bitstring.
+fun pk(bitstring):bitstring.
+fun sdec(bitstring,bitstring):bitstring.
+fun senc(bitstring,bitstring):bitstring.
+fun sign(bitstring,bitstring):bitstring.
+fun snd(bitstring):bitstring.
+fun verify(bitstring,bitstring,bitstring):bitstring.
+event eAcceptsClient(bitstring).
+event eAcceptsServer(bitstring,bitstring).
+event eLeakKey(bitstring).
+event eSecretS(bitstring).
+event eTermClient(bitstring,bitstring).
+event eTermServer(bitstring).
+equation forall a:bitstring,b:bitstring; exp( exp(g,a),b) = exp(exp(g,b),a).
+equation forall m:bitstring, sk:bitstring;   checksign(sign(m, sk), pk(sk)) = m.
+equation forall x_1:bitstring, x_2:bitstring;   adec(aenc(x_1, pk(x_2)), x_2) = x_1.
+equation forall x_1:bitstring, x_2:bitstring;   fst((x_1, x_2)) = x_1.
+equation forall x_1:bitstring, x_2:bitstring;   sdec(senc(x_1, x_2), x_2) = x_1.
+equation forall x_1:bitstring, x_2:bitstring;   snd((x_1, x_2)) = x_2.
+equation forall x_1:bitstring, x_2:bitstring;   verify(sign(x_1, x_2), x_1, pk(x_2)) = okay.
+set preciseActions=true.
+set simplifyProcess = false.
+set reconstructTrace = false.
+
+free s : bitstring [ private ] .
+query attacker ( s ) .
+
+(*ClientTerminatesImpliesServerAccepted*)
+query k:bitstring, pkA:bitstring, i:time, j:time;
+ (event(eTermClient( k, pkA ))@i) ==>
+ ((event(eAcceptsServer( k, pkA ))@j) && (j < i))
+.
+(*InjectiveServerImpliesClientAccepted*)
+query k:bitstring, i:time, j:time;
+ (event(eTermServer( k ))@i) ==>
+ ((event(eAcceptsClient( k ))@j) && (j < i))
+.
+(*SecretS_secrecy*)
+(*∃ s #i. (SecretS( s ) @ #i) ∧ (∃ #j. K( s ) @ #j)*)
+let leakKey(s_2:bitstring)=
+    event eLeakKey( s_2 );
+    out(att,s_2).
+let clientA(skA_2:bitstring, pkA_2:bitstring, pkB_2:bitstring)=
+    let m1_2:bitstring=pkA_2 in
+    out(att,m1_2);
+    in(att,m2_2:bitstring);
+    let sigB_2:bitstring=adec(m2_2, skA_2) in
+    let (pkB_in_2:bitstring, k_in_2:bitstring)=sigB_2 in
+    if verify(sigB_2, (pkB_in_2, k_in_2), pkB_2) = okay then
+        (let k_2:bitstring=k_in_2 in
+         event eAcceptsClient( k_in_2 );
+         new s_2:bitstring;
+         event eSecretS( s_2 );
+         ((leakKey(s_2))
+        | (let m3_2:bitstring=senc((s_2, pkA_2), k_2) in
+           out(att,m3_2);
+           event eTermClient( k_2, pkA_2 )))).
+let serverB(skB_2:bitstring, pkB_2:bitstring, pkA_2:bitstring)=
+    in(att,m1_2:bitstring);
+    let pkA_in_2:bitstring=m1_2 in
+    new k_2:bitstring;
+    event eAcceptsServer( k_2, pkA_in_2 );
+    let sigB_2:bitstring=sign((pkB_2, k_2), skB_2) in
+    let m2_2:bitstring=aenc(sigB_2, pkA_in_2) in
+    out(att,m2_2);
+    in(att,m3_2:bitstring);
+    let (pkA_check_2:bitstring, s_2:bitstring)=sdec(m3_2, k_2) in
+    ((leakKey(s_2))
+   | (let (=pkA_in_2)=pkA_2 in 
+          (event eTermServer( k_2 )))).
+
+
+process
+    new skA_2:bitstring;
+    new skB_2:bitstring;
+    let pkA_2:bitstring=pk(skA_2) in
+    let pkB_2:bitstring=pk(skB_2) in
+    out(att,pkA_2);
+    out(att,pkB_2);
+    !
+    (((clientA(skA_2, pkA_2, pkB_2))
+    | (!
+       (serverB(skB_2, pkB_2, pkA_2)))))
+
+(*
+WARNING: the following wellformedness checks failed!
+
+Inexistant lemma actions
+========================
+
+  lemma `ClientTerminatesImpliesServerAccepted' references action 
+    fact "AcceptsServer" (arity 2, Linear) 
+  but no rule has such an action.
+  
+  lemma `ClientTerminatesImpliesServerAccepted' references action 
+    fact "TermClient" (arity 2, Linear) 
+  but no rule has such an action.
+  
+  lemma `InjectiveServerImpliesClientAccepted' references action 
+    fact "AcceptsClient" (arity 1, Linear) 
+  but no rule has such an action.
+  
+  lemma `InjectiveServerImpliesClientAccepted' references action 
+    fact "TermServer" (arity 1, Linear) 
+  but no rule has such an action.
+  
+  lemma `SecretS_secrecy' references action 
+    fact "SecretS" (arity 1, Linear) 
+  but no rule has such an action.
+*)
+
+(*
+Generated from:
+Tamarin version 1.10.0
+Maude version 2.7.1
+Git revision: UNKNOWN, branch: UNKNOWN
+Compiled at: 2024-10-30 14:56:23.355649243 UTC
+*)
+
+(*
+WARNING: the following wellformedness checks failed!
+
+Inexistant lemma actions
+========================
+
+  lemma `ClientTerminatesImpliesServerAccepted' references action 
+    fact "AcceptsServer" (arity 2, Linear) 
+  but no rule has such an action.
+  
+  lemma `ClientTerminatesImpliesServerAccepted' references action 
+    fact "TermClient" (arity 2, Linear) 
+  but no rule has such an action.
+  
+  lemma `InjectiveServerImpliesClientAccepted' references action 
+    fact "AcceptsClient" (arity 1, Linear) 
+  but no rule has such an action.
+  
+  lemma `InjectiveServerImpliesClientAccepted' references action 
+    fact "TermServer" (arity 1, Linear) 
+  but no rule has such an action.
+  
+  lemma `SecretS_secrecy' references action 
+    fact "SecretS" (arity 1, Linear) 
+  but no rule has such an action.
+*)
+
+(*
+Generated from:
+Tamarin version 1.10.0
+Maude version 2.7.1
+Git revision: UNKNOWN, branch: UNKNOWN
+Compiled at: 2024-10-30 14:56:23.355649243 UTC
+*)

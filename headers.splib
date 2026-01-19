@@ -1,0 +1,26 @@
+export queries:
+ "
+set preciseActions=true.
+set simplifyProcess = false.
+set reconstructTrace = false.
+"
+
+export queries:
+"
+free s : bitstring [ private ] .
+query attacker ( s ) .
+"
+
+#ifdef LeakKey
+let leakKey(s) =
+ event LeakKey(s); out(s)
+#else
+let leakKey(s) =  event LeakKey('null')
+#endif
+
+#ifdef LeakDH
+let leakDH(s) =
+ event LeakDH(s); out(s)
+#else
+let leakDH(s) =  event LeakDH('null')
+#endif

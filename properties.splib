@@ -1,0 +1,50 @@
+/* Authentication
+
+The protocol is intended to ensure that, if client A thinks she executes the protocol with server B, then she really does so, and
+vice versa. When we say ‘she thinks’ that she executes it with B, we mean that the data she receives indicates that fact. 
+
+- event acceptsClient(key): which is used by the client to record the belief that she has accepted to
+    run the protocol with the server B and the supplied symmetric key.
+- event acceptsServer(key,pkey): which is used to record the fact that the server considers he has
+    accepted to run the protocol with a client, with the proposed key supplied as the first argument
+    and the client’s public key as the second.
+- event termClient(key,pkey), which means the client believes she has terminated a protocol run
+    using the symmetric key supplied as the first argument and the client’s public key as the second.
+- event termServer(key), which denotes the server’s belief that he has terminated a protocol run
+    with the client A with the symmetric key supplied as the first argument.
+
+Recall that the client is only willing to share her secret with the server B; it follows that, if she completes
+the protocol, then she believes she has done so with B and hence authentication of B to A should hold.
+In contrast, server B is willing to run the protocol with any client (that is, he is willing to learn secrets
+from many clients), and hence at the end of the protocol he only expects authentication of A to B to
+hold, if he believes A was indeed his interlocutor (so termServer(x) is executed only when pkX = pkA).
+
+
+*/
+
+// Authentictaion of A to B. 
+// It holds since Client cannot Terminante unless the Server sent k.
+//This shows the client is not fooled: if it finishes, the server must have run.
+lemma ClientTerminatesImpliesServerAccepted:
+    "All k pkA #i.
+     TermClient(k, pkA)@i
+     ==>
+     (Ex #j. AcceptsServer(k, pkA)@j & j < i)
+    "
+// Authentication B to A
+// Whenever the server terminates on key k1,the client must have accepted that key earlier.   
+lemma InjectiveServerImpliesClientAccepted:
+    "All k #i.
+     TermServer(k)@i
+     ==>
+     (Ex #j. AcceptsClient(k)@j & j < i)
+    "
+
+
+// Secrecy
+lemma SecretS_secrecy:
+    "All s #i.
+     SecretS(s)@i
+     ==>
+     not (Ex #j. KU(s)@j)
+    "
