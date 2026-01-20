@@ -1,4 +1,4 @@
-FROM debian:12-slim
+FROM --platform=linux/amd64 debian:12-slim
 
 LABEL version="1.1" \
       description="Formal Analysis Workshop: DH Secrecy & Auth (ProVerif + Tamarin)" \
