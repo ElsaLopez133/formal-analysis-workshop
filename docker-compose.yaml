@@ -1,5 +1,6 @@
 services:
   tamarin:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Docker/Dockerfile

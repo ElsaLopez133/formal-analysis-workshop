@@ -94,13 +94,13 @@ Open a new terminal window and use:
 #### To prove a specific file:
 
 ```bash
-hdocker-compose exec tamarin tamarin-prover 04_auth_and_secrecy_hold.spthy --prove
+docker-compose exec tamarin tamarin-prover 04_auth_and_secrecy_hold.spthy --prove
 ```
 
 #### To run a manual command inside the container
 
 ```bash
-hdocker-compose exec tamarin /bin/bash
+docker-compose exec tamarin /bin/bash
 ```
 
 ## 🛑 Troubleshooting
