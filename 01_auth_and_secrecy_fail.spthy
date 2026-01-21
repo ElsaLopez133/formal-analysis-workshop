@@ -1,11 +1,10 @@
 /*
 This protocol is a classic example of a Man-in-the-Middle (MitM) vulnerability.
-Authentication Fails: Even though B encrypts G_B for A ( aenc(G_B, pkA)), 
-there is no binding to G_A.
-An attacker can intercept A's G_A, substitute it with their own exponent G_M, 
-and perform a separate DH exchange with B. 
+- Authentication Fails: Even though B encrypts G_B for A ( aenc(G_B, pkA)), 
+there is no binding to G_A. An attacker can intercept A's G_A, substitute it 
+with their own exponent G_M, and perform a separate DH exchange with B. 
 
-Secrecy Fails: The session key is derived from the DH exchange (G_BA = G_B^~a).
+- Secrecy Fails: The session key is derived from the DH exchange (G_BA = G_B^~a).
 Since authentication fails, an attacker can establish separate keys with A and B,
 allowing them to decrypt and access the session key ~s that A sends encrypted under G_BA.
 */
