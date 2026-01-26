@@ -11,7 +11,7 @@ services:
       - .:/workshop
     # This environment variable ensures Maude finds its prelude file
     environment:
-      - MAUDE_LIB=/opt/maude_dir
+      - MAUDE_LIB=/opt/maude/maude
     command: tamarin-prover interactive . --interface=0.0.0.0
 
 # To run: docker-compose up --buil
