@@ -44,11 +44,11 @@ RUN cd /opt && \
 
 
 RUN cd /opt && \
-    curl -LO https://github.com/maude-lang/Maude/releases/download/Maude3.3.1/Maude-linux.zip && \
-    unzip Maude-linux.zip && \
-    mv Linux64 maude && \
-    chmod +x /opt/maude/maude.linux64 && \
-    mv /opt/maude/maude.linux64 /opt/maude/maude && \
+    curl -LO https://github.com/maude-lang/Maude/releases/download/Maude3.5/Maude-3.5-linux-x86_64.zip && \
+    mkdir maude && \
+    cd maude && \
+    unzip ../Maude-3.5-linux-x86_64.zip && \
+    chmod +x /opt/maude/maude && \
     ln -s /opt/maude/maude /usr/local/bin/maude
 
 # ------------------------------------------------------
